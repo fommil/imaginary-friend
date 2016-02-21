@@ -19,8 +19,14 @@ class imaginary extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro ImaginaryFriendMacros.generate
 }
 
+object ImaginaryFriend {
+  def figment[T]: T = macro ImaginaryFriendMacros.figment[T]
+}
+
 @bundle
 class ImaginaryFriendMacros(val c: Context) {
+
+  import c.universe._
 
   def generate(annottees: c.Expr[Any]*): c.Expr[Any] = {
 
@@ -186,5 +192,9 @@ class ImaginaryFriendMacros(val c: Context) {
     //    //    val outputs = expandees
     //
 
+  }
+
+  def figment[C: WeakTypeTag]: Tree = {
+    q"new ${weakTypeOf[C]} { def illusion = 4 }"
   }
 }
