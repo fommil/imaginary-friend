@@ -4,9 +4,10 @@
 // intentionally not in fommil for testing
 package testing
 
-import fommil.imaginary
-
 import org.scalatest._
+import scala.annotation.StaticAnnotation
+
+class imaginary extends StaticAnnotation
 
 @imaginary
 class Me
@@ -22,10 +23,10 @@ object MyObj {
 //@imaginary
 //class Mine(val foo: String = "foo", val bar: Long = 13)
 
-class ImaginaryFriendSpec extends FlatSpec with Matchers {
-  "@imaginary" should "generate companion's apply with no parameters" in {
-    val me: Me = Me()
-  }
+class FakeSpec extends FlatSpec with Matchers {
+  // "@imaginary" should "generate companion's apply with no parameters" in {
+  //   val me: Me = Me()
+  // }
 
   //  it should "generate companion apply with parameters" in {
   //    Myself("foo", 23L) shouldBe a[Myself]

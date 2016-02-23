@@ -34,12 +34,14 @@ object ImaginaryFriendBuild extends Build {
 
   lazy val whitebox = p("whitebox").settings(
     libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       "org.typelevel" %% "macro-compat" % "1.1.0"
     ) ++ Sensible.macroParadise
   )
 
   lazy val plugin = p("plugin").settings(
+    scalacOptions in Test <+= (packageBin in Compile) map { jar =>
+      "-Xplugin:" + jar.getAbsolutePath
+    }
   )
 
 }
