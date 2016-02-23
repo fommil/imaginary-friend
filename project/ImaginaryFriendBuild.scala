@@ -5,17 +5,41 @@ import Keys._
 import SonatypeSupport._
 
 object ImaginaryFriendBuild extends Build {
-  lazy val root = Project("imaginary-friend", file(".")).
-    settings(Sensible.settings).
-    settings(sonatype("fommil", "imaginary-friend", Apache2)).
-    settings(
-      organization := "com.fommil",
-      scalaVersion := "2.11.7",
-      version := "1.0.0-SNAPSHOT",
-      libraryDependencies ++= Seq(
-        "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-        "org.typelevel" %% "macro-compat" % "1.1.0"
-      ) ++ Sensible.testLibs() ++ Sensible.macroParadise,
-      updateOptions := updateOptions.value.withCachedResolution(true)
+
+  lazy override val settings = super.settings ++ Seq(
+    scalaVersion := "2.11.7",
+    organization := "com.fommil",
+    name := "imaginary-friend",
+    version := "1.0.0-SNAPSHOT"
+  )
+
+  def p(name: String): Project = Project(name, file(name)).settings(
+    Sensible.settings ++ sonatype("fommil", "imaginary-friend", Apache2)
+  ).settings(
+    updateOptions := updateOptions.value.withCachedResolution(true),
+    libraryDependencies ++= Sensible.testLibs() ++ Seq(
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value
     )
+  )
+
+  lazy val pctest = p("pctest").settings(
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+      "org.typelevel" %% "macro-compat" % "1.1.0"
+    ) ++ Sensible.macroParadise
+  )
+
+  lazy val blackbox = p("blackbox").settings(
+  )
+
+  lazy val whitebox = p("whitebox").settings(
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+      "org.typelevel" %% "macro-compat" % "1.1.0"
+    ) ++ Sensible.macroParadise
+  )
+
+  lazy val plugin = p("plugin").settings(
+  )
+
 }

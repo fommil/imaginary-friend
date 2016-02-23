@@ -5,7 +5,6 @@
 package testing
 
 import fommil.imaginary
-import fommil.ImaginaryFriend
 
 import org.scalatest._
 
@@ -26,11 +25,6 @@ object MyObj {
 class ImaginaryFriendSpec extends FlatSpec with Matchers {
   "@imaginary" should "generate companion's apply with no parameters" in {
     val me: Me = Me()
-  }
-
-  "extend" should "add a foo method" in {
-    class A
-    val x: Int = ImaginaryFriend.figment[A].illusion
   }
 
   //  it should "generate companion apply with parameters" in {
