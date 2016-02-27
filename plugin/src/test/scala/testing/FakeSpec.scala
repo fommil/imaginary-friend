@@ -7,7 +7,7 @@ package testing
 import org.scalatest._
 import scala.annotation.StaticAnnotation
 
-class imaginary extends StaticAnnotation
+class imaginary(foo: String, bar: Long) extends StaticAnnotation
 
 @imaginary
 class Me

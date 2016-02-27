@@ -19,3 +19,37 @@ This project is an experiment in what breaks the presentation compiler (specific
 # Prior Art
 
 [ENSIME](https://github.com/ensime/ensime-server/tree/master/core/src/it/scala/org/ensime) and [scala-refactoring]( https://github.com/scala-ide/scala-refactoring/tree/master/src/test) provide mechanisms for testing user code within the presentation compiler, and could form the basis for a reusable test framework for plugin authors.
+
+# Example
+
+The example used in this experiment is an annotation
+
+```scala
+class imaginary(foo: String, bar: Long) extends StaticAnnotation
+```
+
+where each `class` annotated with `@imaginary` has the following generated:
+
+1. parameters for `foo` and `bar`, unless provided.
+2. `apply` method created on the companion.
+3. a method on the companion for each `val param: T` of the same signature.
+
+For example
+
+```scala
+@imaginary
+class Baz(val fred: String)
+```
+
+expands to
+
+```scala
+@imaginary(foo = null, bar = null)
+class Baz(val fred: String)
+object Baz {
+  def apply(fred: String): Baz = null
+  def fred: String = null
+}
+```
+
+Recall that values don't matter because the plugin runs in the presentation compiler.

@@ -6,42 +6,37 @@ import scala.tools.nsc._
 import scala.tools.nsc.transform._
 import scala.tools.nsc.plugins._
 
-class ImaginaryPlugin(val global: Global) extends Plugin {
-  import global._
-
+class ImaginaryPlugin(override val global: Global) extends Plugin {
+  override val description: String = "imaginary"
+  override val name: String = "imaginary"
   override val components: List[PluginComponent] = List(
     new PluginComponent with TypingTransformers {
-      val global: ImaginaryPlugin.this.global.type = ImaginaryPlugin.this.global
+      override val global = ImaginaryPlugin.this.global
+      import global._
 
-      val imaginaryName = TermName("testing.imaginary")
-      val imaginarySym = imaginaryName
+      override def newPhase(prev: Phase): Phase = new StdPhase(prev) {
+        override def apply(unit: CompilationUnit): Unit = newTransformer(unit).transformUnit(unit)
+      }
+
+      override val runsAfter: List[String] = "refchecks" :: Nil
+      override val phaseName: String = "imaginary"
+
+      // there has got to be a more efficient way to do this
+      def hasAnnotation(sym: TypeSymbol, ann: String): Boolean =
+        sym.annotations.exists(_.symbol.tpe.dealias.toLongString == ann)
 
       def newTransformer(unit: CompilationUnit) = new TypingTransformer(unit) {
         override def transform(tree: Tree): Tree = {
           val t = super.transform(tree)
           (t, t.symbol) match {
-            case (ap: ClassDef, sym: TypeSymbol) =>
+            case (ap: ClassDef, sym: TypeSymbol) if hasAnnotation(sym, "testing.imaginary") =>
               println(ap)
-              println(sym)
               ap
 
             case (t, _) => t
           }
         }
       }
-      override def newPhase(prev: Phase): Phase = new StdPhase(prev) {
-        override def apply(unit: CompilationUnit): Unit = {
-          val translated = newTransformer(unit).transformUnit(unit)
-          //println(show(unit.body))
-          translated
-        }
-      }
-
-      override val runsAfter: List[String] = "refchecks" :: Nil
-      override val phaseName: String = "imaginary"
-
     }
   )
-  override val description: String = "imaginary"
-  override val name: String = "imaginary"
 }
