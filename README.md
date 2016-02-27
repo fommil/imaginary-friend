@@ -25,7 +25,7 @@ This project is an experiment in what breaks the presentation compiler (specific
 The example used in this experiment is an annotation
 
 ```scala
-class imaginary(foo: String, bar: Long) extends StaticAnnotation
+class imaginary(foo: String, bar: Boolean) extends StaticAnnotation
 ```
 
 where each `class` annotated with `@imaginary` has the following generated:
@@ -44,7 +44,7 @@ class Baz(val fred: String)
 expands to
 
 ```scala
-@imaginary(foo = null, bar = null)
+@imaginary(foo = null, bar = true)
 class Baz(val fred: String)
 object Baz {
   def apply(fred: String): Baz = null
