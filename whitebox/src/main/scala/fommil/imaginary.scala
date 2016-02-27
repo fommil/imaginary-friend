@@ -49,7 +49,7 @@ class ImaginaryFriendMacros(val c: Context) {
           )
         }
         case objDef: ModuleDef => {
-          println("MODDEF:" + showRaw(objDef))
+          //println("MODDEF:" + showRaw(objDef))
           List(objDef)
         }
       }

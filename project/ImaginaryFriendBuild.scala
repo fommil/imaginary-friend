@@ -39,8 +39,9 @@ object ImaginaryFriendBuild extends Build {
   )
 
   lazy val plugin = p("plugin").settings(
-    scalacOptions in Test <+= (packageBin in Compile) map { jar =>
-      "-Xplugin:" + jar.getAbsolutePath
+    scalacOptions in Test <++= (packageBin in Compile) map { jar =>
+      // needs timestamp to force recompile
+      Seq("-Xplugin:" + jar.getAbsolutePath, "-Jdummy=" + jar.lastModified)
     }
   )
 

@@ -1,0 +1,4 @@
+<plugin>
+  <name>imaginary</name>
+  <classname>fommil.ImaginaryPlugin</classname>
+</plugin>

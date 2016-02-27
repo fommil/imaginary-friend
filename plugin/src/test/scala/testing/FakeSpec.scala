@@ -15,9 +15,17 @@ class Me
 @imaginary
 class Myself(val foo: String, val bar: Long)
 
+class Irene
+
 @imaginary
 object MyObj {
   def apply(foo: String, bar: Long) = null
+}
+
+@imaginary
+class Foo
+object Foo {
+  def ignore(foo: String, bar: Long) = null
 }
 
 //@imaginary

@@ -1,39 +1,47 @@
 // Copyright: 2016 Sam Halliday
 // Licence: http://www.apache.org/licenses/LICENSE-2.0
-
 package fommil
 
-import scala.tools.nsc.{ Global, Phase }
-import scala.tools.nsc.plugins.{ Plugin, PluginComponent }
+import scala.tools.nsc._
+import scala.tools.nsc.transform._
+import scala.tools.nsc.plugins._
 
 class ImaginaryPlugin(val global: Global) extends Plugin {
   import global._
 
-  val name = "imaginary"
-  val description = "Fakes macro magic when it sees an annotation named imaginary"
-  val components = List[PluginComponent](ImaginaryComponent)
+  override val components: List[PluginComponent] = List(
+    new PluginComponent with TypingTransformers {
+      val global: ImaginaryPlugin.this.global.type = ImaginaryPlugin.this.global
 
-  private object ImaginaryComponent extends PluginComponent {
-    val global = ImaginaryPlugin.this.global
-    import global._
+      val imaginaryName = TermName("testing.imaginary")
+      val imaginarySym = imaginaryName
 
-    override val runsAfter = List("erasure")
+      def newTransformer(unit: CompilationUnit) = new TypingTransformer(unit) {
+        override def transform(tree: Tree): Tree = {
+          val t = super.transform(tree)
+          (t, t.symbol) match {
+            case (ap: ClassDef, sym: TypeSymbol) =>
+              println(ap)
+              println(sym)
+              ap
 
-    val phaseName = "Imaginary"
-
-    override def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
-      override def apply(unit: CompilationUnit): Unit = {
-        new ImaginaryTraverser(unit) traverse unit.body
+            case (t, _) => t
+          }
+        }
       }
-    }
-
-    class ImaginaryTraverser(unit: CompilationUnit) extends Traverser {
-      override def traverse(tree: Tree): Unit = tree match {
-        case New(tpt) if exitingTyper(tpt.tpe.typeSymbol.isDerivedValueClass) =>
-          unit.warning(tree.pos, s"Value class `${tpt.tpe.typeSymbol.fullName}` instantiated!")
-        case _ =>
-          super.traverse(tree)
+      override def newPhase(prev: Phase): Phase = new StdPhase(prev) {
+        override def apply(unit: CompilationUnit): Unit = {
+          val translated = newTransformer(unit).transformUnit(unit)
+          //println(show(unit.body))
+          translated
+        }
       }
+
+      override val runsAfter: List[String] = "refchecks" :: Nil
+      override val phaseName: String = "imaginary"
+
     }
-  }
+  )
+  override val description: String = "imaginary"
+  override val name: String = "imaginary"
 }
