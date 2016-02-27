@@ -14,8 +14,12 @@ import scala.tools.nsc.plugins._
  * Copying a `global.Tree` will result in the `pos`, `symbol` and
  * `tpe` fields being reset.
  *
- * The `withPos` provided by this class should be used after any
- * `copy` methods on `Tree` implementations.
+ * The `global.treeCopy._` methods should be used instead of `copy` on
+ * `global.Tree` implementations.
+ *
+ * Note that the `Modifiers.withAnnotations` method adds to existing
+ * methods instead of replacing, so we provide a more cananocial form
+ * here in `copyWithAnns`.
  *
  * http://docs.scala-lang.org/overviews/reflection/symbols-trees-types#trees
  */
@@ -24,24 +28,10 @@ trait WithPos {
 
   // Modifiers is an inner class, oh joy
   implicit class RichModifiers(t: global.Modifiers) {
-    def withPos(orig: global.Modifiers): global.Modifiers = { t.positions = orig.positions; t }
+    /** withAnnotations appears to be broken */
+    def copyWithAnns(anns: List[global.Tree]): global.Modifiers =
+      t.copy(annotations = anns).setPositions(t.positions)
   }
-
-  // *sigh* doesn't work
-  // implicit class RichTree[T <: global.Tree](t: T) {
-  //   def withPos(orig: T): T = { t.pos = orig.pos ; t }
-  // }
-
-  // let's do this the long way...
-  trait HasWithPos[T <: global.Tree] {
-    def t: T
-    def withPos(orig: T): T = { t.pos = orig.pos; t }
-  }
-  implicit class RichApply(val t: global.Apply) extends HasWithPos[global.Apply]
-  implicit class RichModuleDef(val t: global.ModuleDef) extends HasWithPos[global.ModuleDef]
-  implicit class RichClassDef(val t: global.ClassDef) extends HasWithPos[global.ClassDef]
-  // ... add more as needed ...
-
 }
 
 /**
@@ -84,7 +74,8 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       mods.annotations.map {
         case ann @ Apply(Select(New(Ident(Imaginary)), termNames.CONSTRUCTOR), _) =>
           // NOTE: ignores all parameters, even bad ones
-          ann.copy(args = Literal(Constant(null)) :: Literal(Constant(true)) :: Nil).withPos(ann)
+          treeCopy.Apply(ann, ann.fun, Literal(Constant(null)) :: Literal(Constant(true)) :: Nil)
+
         case other => other
       }
     }
@@ -92,11 +83,11 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
     override def transform = {
       case t: ModuleDef if t.mods.hasAnnotationNamed(Imaginary) =>
         val annotations = imaginaryParameters(t.mods)
-        t.copy(mods = t.mods.copy(annotations = annotations).withPos(t.mods)).withPos(t)
+        treeCopy.ModuleDef(t, t.mods.copyWithAnns(annotations), t.name, t.impl)
 
       case t: ClassDef if t.mods.hasAnnotationNamed(Imaginary) =>
         val annotations = imaginaryParameters(t.mods)
-        t.copy(mods = t.mods.copy(annotations = annotations).withPos(t.mods)).withPos(t)
+        treeCopy.ClassDef(t, t.mods.copyWithAnns(annotations), t.name, t.tparams, t.impl)
 
       case t => t
     }
@@ -107,7 +98,8 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
     import global._
 
     override def transform = {
-      case t => t
+      case t =>
+        t
     }
   }
 
