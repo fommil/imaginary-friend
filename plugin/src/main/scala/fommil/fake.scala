@@ -24,7 +24,7 @@ trait WithPos {
 
   // Modifiers is an inner class, oh joy
   implicit class RichModifiers(t: global.Modifiers) {
-    def withPos(orig: global.Modifiers): global.Modifiers = { t.positions = orig.positions ; t }
+    def withPos(orig: global.Modifiers): global.Modifiers = { t.positions = orig.positions; t }
   }
 
   // *sigh* doesn't work

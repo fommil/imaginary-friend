@@ -53,3 +53,41 @@ object Baz {
 ```
 
 Recall that values don't matter because the plugin runs in the presentation compiler.
+
+# ENSIME Integration
+
+To add the compiler plugin example to ENSIME, automatically compiling the plugin first, add this file to your local clone of the repository in `project/EnsimeProjectSettings.scala`
+
+```scala
+import sbt._
+import Keys._
+import org.ensime.Imports.EnsimeKeys
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import language.postfixOps
+
+object EnsimeProjectSettings extends AutoPlugin {
+  override def requires = org.ensime.EnsimePlugin
+  override def trigger = allRequirements
+
+  protected implicit class RichTaskKey[A](key: TaskKey[A]) {
+    def run(implicit pr: ProjectRef, bs: BuildStructure, s: State): A =
+      runOpt.getOrElse { fail(s"Missing task key: ${key.key.label}") }
+    def runOpt(implicit pr: ProjectRef, bs: BuildStructure, s: State): Option[A] =
+      EvaluateTask(bs, key, s, pr).map(_._2) match {
+        case Some(Value(v)) => Some(v)
+        case _              => None
+      }
+  }
+
+  override def projectSettings = Seq(
+    EnsimeKeys.scalariform := ScalariformKeys.preferences.value,
+    EnsimeKeys.compilerArgs <+= state.map { implicit s =>
+      // ensures the jar is built first
+      implicit val structure = Project.extract(s).structure
+      implicit val plugin = structure.allProjectRefs.find(_.project == "plugin").get
+      val jar = (packageBin in plugin in Compile).run
+      s"-Xplugin:${jar.getCanonicalPath}"
+    }
+  )
+}
+```
