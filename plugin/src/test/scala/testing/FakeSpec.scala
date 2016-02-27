@@ -7,7 +7,7 @@ package testing
 import org.scalatest._
 import scala.annotation.StaticAnnotation
 
-class imaginary(foo: String, bar: Long) extends StaticAnnotation
+class imaginary(foo: String, bar: Boolean) extends StaticAnnotation
 
 @imaginary
 class Me
@@ -16,6 +16,9 @@ class Me
 class Myself(val foo: String, val bar: Long)
 
 class Irene
+
+@imaginary
+trait Mallgan
 
 @imaginary
 object MyObj {
