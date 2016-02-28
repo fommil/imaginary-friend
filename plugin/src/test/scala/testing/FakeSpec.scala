@@ -26,36 +26,41 @@ object MyObj {
 }
 
 @imaginary
-class Foo(foo: String, bar: Long)
-// object Foo extends ((String, Long) => Foo) {
-//   def apply(foo: String, bar: Long): Foo = new Foo(foo, bar)
-// }
+class Foo(foo: String, bar: Long) {
+  val baz: String = foo // shouldn't be in constructor
+}
 object Foo {
   def ignore(foo: String, bar: Long): Foo = new Foo(foo, bar)
 }
 
-//@imaginary
-//class Mine(val foo: String = "foo", val bar: Long = 13)
+@imaginary
+class Mine(val foo: String = "foo", val bar: Long = 13)
 
 class FakeSpec extends FlatSpec with Matchers {
-  // "@imaginary" should "generate companion's apply with no parameters" in {
-  //   val me: Me = Me()
-  // }
-
-  it should "create Foo's companion" in {
-    Mallgan shouldBe a[Mallgan.type]
-
-    Foo("foo", 13L) shouldBe a[Foo]
+  "@imaginary" should "generate companion's apply with no parameters" in {
+    { Me(): Me } shouldBe null
   }
 
-  //  it should "generate companion apply with parameters" in {
-  //    Myself("foo", 23L) shouldBe a[Myself]
-  //  }
-  //
-  //  it should "generate companion apply with named / default parameters" in {
-  //    Mine("foo") shouldBe a[Mine]
-  //    Mine(foo = "foo") shouldBe a[Mine]
-  //    Mine(bar = 10) shouldBe a[Mine]
-  //  }
+  it should "create a companion for Mallgan" in {
+    Mallgan shouldBe a[Mallgan.type]
+  }
+
+  it should "generate companion apply with parameters" in {
+    { Myself("foo", 23L): Myself } shouldBe null
+  }
+
+  it should "update Foo's companion" in {
+    Foo.ignore("foo", 13L) shouldBe a[Foo]
+
+    { Foo("foo", 13L): Foo } shouldBe null
+  }
+
+  it should "generate companion apply with named / default parameters" in {
+    { Mine("foo"): Mine } shouldBe null
+
+    { Mine(foo = "foo"): Mine } shouldBe null
+
+    { Mine(bar = 10): Mine } shouldBe null
+  }
 
 }

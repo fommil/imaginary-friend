@@ -129,6 +129,9 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       //def name = newTermName(clazz.name.toString)
       def tpe = newTypeName(clazz.name.toString)
 
+      // IN params
+      // Some(List(List(ValDef(Modifiers(PARAM | PARAMACCESSOR), newTermName("foo"), Ident(newTypeName("String")), EmptyTree), ValDef(Modifiers(PARAM | PARAMACCESSOR), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree))))
+
       // TODO: this alternative for Template.parents will use "extends (String, Long) => Foo" as parent
       // List(
       //   AppliedTypeTree(
@@ -137,30 +140,32 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       //   )
       // ),
 
-      // FIXME: this will only work for Foo
-      val apply = DefDef(
-        Modifiers(),
-        newTermName("apply"),
-        List(),
-        List(
-          List(
-            ValDef(Modifiers(ModifierFlags.PARAM), newTermName("foo"), Ident(newTypeName("String")), EmptyTree),
-            ValDef(Modifiers(ModifierFlags.PARAM), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree)
+      clazz.impl.body.collectFirst {
+        case DefDef(_, nme.CONSTRUCTOR, _, params, _, _) => params
+      } match {
+        case None => companion // traits don't have constructor parameters
+        case Some(ps) =>
+          val apply = DefDef(
+            Modifiers(),
+            newTermName("apply"),
+            List(),
+            ps.map { _.map { p => p.copy() /* drops attrs */ } },
+            Ident(tpe),
+            Literal(Constant(null)) // PC plugins don't need implementations
           )
-        ),
-        Ident(tpe),
-        Apply(Select(New(Ident(tpe)), nme.CONSTRUCTOR), List(Ident(newTermName("foo")), Ident(newTermName("bar"))))
-      )
-
-      val impl = companion.impl
-      treeCopy.ModuleDef(
-        companion, companion.mods, companion.name,
-        treeCopy.Template(impl, impl.parents, impl.self, apply :: impl.body)
-      )
+          treeCopy.ModuleDef(
+            companion, companion.mods, companion.name, {
+            val impl = companion.impl
+            treeCopy.Template(impl, impl.parents, impl.self, apply :: impl.body)
+          }
+          )
+      }
     }
 
     override def transform = {
       case t: PackageDef =>
+        // TODO: short circuit when there are no @imaginary uses in the file
+        // possibly even use an extractor to get at the information we need
 
         val classes = t.stats.collect {
           case c: ClassDef => c.name -> c
@@ -171,6 +176,7 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
         }.toMap
 
         val updated = t.stats.flatMap {
+          // an extractor would clean this up
           case c: ClassDef if !companions.contains(c.name.companionName) &&
             c.mods.hasAnnotationNamed(Imaginary) =>
             List(c, updateCompanion(c, genCompanion(c)))
