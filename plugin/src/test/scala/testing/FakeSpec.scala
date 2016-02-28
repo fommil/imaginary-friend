@@ -22,13 +22,13 @@ trait Mallgan
 
 @imaginary
 object MyObj {
-  def apply(foo: String, bar: Long) = null
+  def apply(foo: String, bar: Long): Me = null
 }
 
 @imaginary
 class Foo
 object Foo {
-  def ignore(foo: String, bar: Long) = null
+  def ignore(foo: String, bar: Long): Foo = null
 }
 
 //@imaginary

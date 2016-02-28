@@ -62,7 +62,8 @@ object Sensible {
       "org.scala-lang" % "scalap" % scalaVersion.value,
       "org.scala-lang.modules" %% "scala-xml" % scalaModulesVersion,
       "org.scala-lang.modules" %% "scala-parser-combinators" % scalaModulesVersion,
-      "org.scalamacros" %% "quasiquotes" % quasiquotesVersion
+      "org.scalamacros" %% "quasiquotes" % quasiquotesVersion,
+      "org.scalatest" %% "scalatest" % scalatestVersion
     ) ++ logback ++ guava ++ shapeless(scalaVersion.value)
   ) ++ inConfig(Test)(testSettings) ++ scalariformSettings
 

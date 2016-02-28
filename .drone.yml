@@ -9,7 +9,7 @@ build:
         git --no-pager diff ;
         exit 1 ;
       fi
-    - sbt ++$SCALA_VERSION test
+    - sbt ++$SCALA_VERSION plugin/test
 
 matrix:
   SCALA_VERSION:

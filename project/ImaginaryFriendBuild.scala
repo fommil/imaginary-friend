@@ -7,7 +7,7 @@ import SonatypeSupport._
 object ImaginaryFriendBuild extends Build {
 
   lazy override val settings = super.settings ++ Seq(
-    scalaVersion := "2.11.7",
+    scalaVersion := "2.10.6",
     organization := "com.fommil",
     name := "imaginary-friend",
     version := "1.0.0-SNAPSHOT"

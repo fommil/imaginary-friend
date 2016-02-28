@@ -50,7 +50,7 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
 
   abstract class TransformingComponent(override val global: Global) extends PluginComponent with TypingTransformers with WithPos with IsIde {
 
-    val Imaginary = global.TypeName(target)
+    val Imaginary = global.newTypeName(target)
 
     override def newPhase(prev: Phase): Phase = new StdPhase(prev) {
       override def apply(unit: global.CompilationUnit): Unit = newTransformer(unit).transformUnit(unit)
@@ -72,7 +72,7 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
 
     def imaginaryParameters(mods: global.Modifiers) = {
       mods.annotations.map {
-        case ann @ Apply(Select(New(Ident(Imaginary)), termNames.CONSTRUCTOR), _) =>
+        case ann @ Apply(Select(New(Ident(Imaginary)), nme.CONSTRUCTOR), _) =>
           // NOTE: ignores all parameters, even bad ones
           treeCopy.Apply(ann, ann.fun, Literal(Constant(null)) :: Literal(Constant(true)) :: Nil)
 
