@@ -95,13 +95,93 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
 
   private val ImaginaryFriend = new TransformingComponent(global) {
     override val phaseName: String = "imaginary-companion"
-    //import global._
+    import global._
 
     override def transform = {
-      case t =>
-        t
+      case t: ClassDef if t.mods.hasAnnotationNamed(Imaginary) & t.name.toString == "Foo" =>
+        if (!isIde) {
+          println("\n")
+          println(t)
+          println(showRaw(t))
+          println("NAME = " + t.name)
+        }
+
+        // FROM
+        // ClassDef(Modifiers(NoFlags, tpnme.EMPTY, List(Apply(Select(New(Ident(newTypeName("imaginary"))), nme.CONSTRUCTOR), List()))), newTypeName("Foo"), List(), Template(List(Select(Ident(scala), newTypeName("AnyRef"))), emptyValDef, List(ValDef(Modifiers(PRIVATE | LOCAL | PARAMACCESSOR), newTermName("foo"), Ident(newTypeName("String")), EmptyTree), ValDef(Modifiers(PRIVATE | LOCAL | PARAMACCESSOR), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree), DefDef(Modifiers(), nme.CONSTRUCTOR, List(), List(List(ValDef(Modifiers(PARAM | PARAMACCESSOR), newTermName("foo"), Ident(newTypeName("String")), EmptyTree), ValDef(Modifiers(PARAM | PARAMACCESSOR), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree))), TypeTree(), Block(List(Apply(Select(Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR), List())), Literal(Constant(())))))))
+
+        // ModuleDef(Modifiers(), newTermName("Foo"), Template(List(Select(Ident(scala), newTypeName("AnyRef"))), emptyValDef, List(DefDef(Modifiers(), nme.CONSTRUCTOR, List(), List(List()), TypeTree(), Block(List(Apply(Select(Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR), List())), Literal(Constant(())))), DefDef(Modifiers(), newTermName("apply"), List(), List(List(ValDef(Modifiers(PARAM), newTermName("foo"), Ident(newTypeName("String")), EmptyTree), ValDef(Modifiers(PARAM), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree))), Ident(newTypeName("Foo")), Apply(Select(New(Ident(newTypeName("Foo"))), nme.CONSTRUCTOR), List(Ident(newTermName("foo")), Ident(newTermName("bar"))))))))
+
+        //val name = t.name.toString
+        // val companion = ModuleDef(
+        //   Modifiers(),
+        //   newTermName(name),
+        //   Template(
+        //     List(Select(Ident("scala"), newTypeName("AnyRef"))),
+        //     // List(
+        //     //   AppliedTypeTree(
+        //     //     // FIXME: do we really need this parent? case classes have it, depends on constructor parameters
+        //     //     Select(Select(Ident(nme.ROOTPKG), "scala"), newTypeName("Function2")),
+        //     //     List(Ident(newTypeName("String")), Ident(newTypeName("Long")), Ident(newTypeName(name)))
+        //     //   )
+        //     // ),
+        //     emptyValDef,
+        //     List(
+        //       DefDef(
+        //         Modifiers(),
+        //         nme.CONSTRUCTOR,
+        //         List(),
+        //         List(List()),
+        //         TypeTree(),
+        //         Block(
+        //           List(
+        //             Apply(Select(Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR), List())
+        //           ),
+        //           Literal(Constant(()))
+        //         )
+        //       ),
+        //       DefDef(
+        //         Modifiers(),
+        //         newTermName("apply"),
+        //         List(),
+        //         List(
+        //           List(
+        //             ValDef(Modifiers(reflect.internal.ModifierFlags.PARAM), newTermName("foo"), Ident(newTypeName("String")), EmptyTree),
+        //             ValDef(Modifiers(reflect.internal.ModifierFlags.PARAM), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree)
+        //           )
+        //         ),
+        //         Ident(newTypeName(name)),
+        //         Apply(Select(New(Ident(newTypeName(name))), nme.CONSTRUCTOR), List(Ident(newTermName("foo")), Ident(newTermName("bar"))))
+        //       )
+        //     )
+        //   )
+        // )
+
+        val name = newTermName(t.name.toString)
+        val companion = q"""
+              object ${name} {
+               def apply () :${t.name}= null
+              }
+          """
+
+        // // does this need the attrs of t?
+        val block = Block(t, companion)
+        // block.pos = t.pos
+        // //block.symbol.owner = t.symbol.owner
+        block
+
+      //t
+
+      // case t: ModuleDef =>
+      //   if (!isIde) {
+      //     println("\n")
+      //     println(t)
+      //     println(showRaw(t))
+      //   }
+      //   t
+
+      case t => t
     }
   }
 
-  override val components = List(ImaginaryParameters)
+  override val components = List(ImaginaryParameters, ImaginaryFriend)
 }

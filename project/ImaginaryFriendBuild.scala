@@ -19,7 +19,7 @@ object ImaginaryFriendBuild extends Build {
     updateOptions := updateOptions.value.withCachedResolution(true),
     libraryDependencies ++= Sensible.testLibs() ++ Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value
-    )
+    ) ++ Sensible.macroParadise
   )
 
   lazy val pctest = p("pctest").settings(

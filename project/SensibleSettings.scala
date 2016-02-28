@@ -110,7 +110,8 @@ object Sensible {
   val guavaVersion = "18.0"
 
   val macroParadise = Seq(
-    compilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full)
+    compilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full),
+    "org.scalamacros" %% "quasiquotes" % quasiquotesVersion
   )
   def shapeless(scalaVersion: String) = {
     if (scalaVersion.startsWith("2.10.")) macroParadise
