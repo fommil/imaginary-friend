@@ -2,6 +2,7 @@
 // Licence: http://www.apache.org/licenses/LICENSE-2.0
 package fommil
 
+import scala.collection.breakOut
 import scala.reflect.internal.ModifierFlags
 import scala.tools.nsc._
 import scala.tools.nsc.plugins._
@@ -157,28 +158,42 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       }
     }
 
+    def hasImaginaryClasses(t: PackageDef): Boolean =
+      t.stats.collectFirst {
+        case c: ClassDef if c.mods.hasAnnotationNamed(Imaginary) => c
+      }.isDefined
+
     override def transform = {
-      case t: PackageDef =>
-        // TODO: short circuit when there are no @imaginary uses in the file
-        // possibly even use an extractor to get at the information we need
-
-        val classes = t.stats.collect {
+      case t: PackageDef if hasImaginaryClasses(t) =>
+        val classes: Map[TypeName, ClassDef] = t.stats.collect {
           case c: ClassDef => c.name -> c
-        }.toMap
+        }(breakOut)
 
-        val companions = t.stats.collect {
+        val companions: Map[TermName, ModuleDef] = t.stats.collect {
           case m: ModuleDef => m.name -> m
-        }.toMap
+        }(breakOut)
+
+        object ClassWithoutCompanion {
+          def unapply(t: Tree): Option[ClassDef] = t match {
+            case c: ClassDef if !companions.contains(c.name.companionName) => Some(c)
+            case _ => None
+          }
+        }
+
+        object ClassWithCompanion {
+          def unapply(t: Tree): Option[(ClassDef, ModuleDef)] = t match {
+            case m: ModuleDef =>
+              classes.get(m.name.companionName).map { c => (c, m) }
+            case _ => None
+          }
+        }
 
         val updated = t.stats.flatMap {
-          // an extractor would clean this up
-          case c: ClassDef if !companions.contains(c.name.companionName) &&
-            c.mods.hasAnnotationNamed(Imaginary) =>
+          case ClassWithoutCompanion(c) if c.mods.hasAnnotationNamed(Imaginary) =>
             List(c, updateCompanion(c, genCompanion(c)))
 
-          case m: ModuleDef if classes.contains(m.name.companionName) &&
-            classes(m.name.companionName).mods.hasAnnotationNamed(Imaginary) =>
-            List(updateCompanion(classes(m.name.companionName), m))
+          case ClassWithCompanion(c, companion) if c.mods.hasAnnotationNamed(Imaginary) =>
+            List(updateCompanion(c, companion))
 
           case t =>
             List(t)
