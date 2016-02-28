@@ -2,9 +2,10 @@
 // Licence: http://www.apache.org/licenses/LICENSE-2.0
 package fommil
 
+import scala.reflect.internal.ModifierFlags
 import scala.tools.nsc._
-import scala.tools.nsc.transform._
 import scala.tools.nsc.plugins._
+import scala.tools.nsc.transform._
 
 /**
  * A major source of bugs in macros and compiler plugins is failure to
@@ -99,85 +100,91 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
 
     override def transform = {
       case t: ClassDef if t.mods.hasAnnotationNamed(Imaginary) & t.name.toString == "Foo" =>
-        if (!isIde) {
-          println("\n")
-          println(t)
-          println(showRaw(t))
-          println("NAME = " + t.name)
-        }
+        // if (!isIde) {
+        //   println("\n")
+        //   println(t)
+        //   println(showRaw(t))
+        // }
 
         // FROM
         // ClassDef(Modifiers(NoFlags, tpnme.EMPTY, List(Apply(Select(New(Ident(newTypeName("imaginary"))), nme.CONSTRUCTOR), List()))), newTypeName("Foo"), List(), Template(List(Select(Ident(scala), newTypeName("AnyRef"))), emptyValDef, List(ValDef(Modifiers(PRIVATE | LOCAL | PARAMACCESSOR), newTermName("foo"), Ident(newTypeName("String")), EmptyTree), ValDef(Modifiers(PRIVATE | LOCAL | PARAMACCESSOR), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree), DefDef(Modifiers(), nme.CONSTRUCTOR, List(), List(List(ValDef(Modifiers(PARAM | PARAMACCESSOR), newTermName("foo"), Ident(newTypeName("String")), EmptyTree), ValDef(Modifiers(PARAM | PARAMACCESSOR), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree))), TypeTree(), Block(List(Apply(Select(Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR), List())), Literal(Constant(())))))))
 
-        // ModuleDef(Modifiers(), newTermName("Foo"), Template(List(Select(Ident(scala), newTypeName("AnyRef"))), emptyValDef, List(DefDef(Modifiers(), nme.CONSTRUCTOR, List(), List(List()), TypeTree(), Block(List(Apply(Select(Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR), List())), Literal(Constant(())))), DefDef(Modifiers(), newTermName("apply"), List(), List(List(ValDef(Modifiers(PARAM), newTermName("foo"), Ident(newTypeName("String")), EmptyTree), ValDef(Modifiers(PARAM), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree))), Ident(newTypeName("Foo")), Apply(Select(New(Ident(newTypeName("Foo"))), nme.CONSTRUCTOR), List(Ident(newTermName("foo")), Ident(newTermName("bar"))))))))
+        // not sure these can be re-used, so creating fresh ones
+        def name = newTermName(t.name.toString)
+        def tpe = newTypeName(t.name.toString)
 
-        //val name = t.name.toString
-        // val companion = ModuleDef(
-        //   Modifiers(),
-        //   newTermName(name),
-        //   Template(
-        //     List(Select(Ident("scala"), newTypeName("AnyRef"))),
-        //     // List(
-        //     //   AppliedTypeTree(
-        //     //     // FIXME: do we really need this parent? case classes have it, depends on constructor parameters
-        //     //     Select(Select(Ident(nme.ROOTPKG), "scala"), newTypeName("Function2")),
-        //     //     List(Ident(newTypeName("String")), Ident(newTypeName("Long")), Ident(newTypeName(name)))
-        //     //   )
-        //     // ),
-        //     emptyValDef,
-        //     List(
-        //       DefDef(
-        //         Modifiers(),
-        //         nme.CONSTRUCTOR,
-        //         List(),
-        //         List(List()),
-        //         TypeTree(),
-        //         Block(
-        //           List(
-        //             Apply(Select(Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR), List())
-        //           ),
-        //           Literal(Constant(()))
-        //         )
-        //       ),
-        //       DefDef(
-        //         Modifiers(),
-        //         newTermName("apply"),
-        //         List(),
-        //         List(
-        //           List(
-        //             ValDef(Modifiers(reflect.internal.ModifierFlags.PARAM), newTermName("foo"), Ident(newTypeName("String")), EmptyTree),
-        //             ValDef(Modifiers(reflect.internal.ModifierFlags.PARAM), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree)
-        //           )
-        //         ),
-        //         Ident(newTypeName(name)),
-        //         Apply(Select(New(Ident(newTypeName(name))), nme.CONSTRUCTOR), List(Ident(newTermName("foo")), Ident(newTermName("bar"))))
-        //       )
-        //     )
-        //   )
-        // )
+        val companion = ModuleDef(
+          Modifiers(),
+          name,
+          Template(
+            List(Select(Ident("scala"), newTypeName("AnyRef"))),
+            // TODO: this alternative block will use "extends (String, Long) => Foo" as parent
+            // List(
+            //   AppliedTypeTree(
+            //     Select(Select(Ident(nme.ROOTPKG), "scala"), newTypeName("Function2")),
+            //     List(Ident(newTypeName("String")), Ident(newTypeName("Long")), Ident(newTypeName(name)))
+            //   )
+            // ),
+            emptyValDef,
+            List(
+              DefDef(
+                Modifiers(),
+                nme.CONSTRUCTOR,
+                List(),
+                List(List()),
+                TypeTree(),
+                Block(
+                  List(
+                    Apply(Select(Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR), List())
+                  ),
+                  Literal(Constant(()))
+                )
+              ),
+              DefDef(
+                Modifiers(),
+                newTermName("apply"),
+                List(),
+                List(
+                  List(
+                    ValDef(Modifiers(ModifierFlags.PARAM), newTermName("foo"), Ident(newTypeName("String")), EmptyTree),
+                    ValDef(Modifiers(ModifierFlags.PARAM), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree)
+                  )
+                ),
+                Ident(tpe),
+                Apply(Select(New(Ident(tpe)), nme.CONSTRUCTOR), List(Ident(newTermName("foo")), Ident(newTermName("bar"))))
+              )
+            )
+          )
+        )
 
-        val name = newTermName(t.name.toString)
-        val companion = q"""
-              object ${name} {
-               def apply () :${t.name}= null
-              }
-          """
+        // both of these result in exceptions, no owners set yet
+        //companion.symbol.owner
+        //t.symbol.owner
 
-        // // does this need the attrs of t?
-        val block = Block(t, companion)
-        // block.pos = t.pos
-        // //block.symbol.owner = t.symbol.owner
-        block
+        treeCopy.Block(t, List(t, companion), Literal(Constant(())))
+
+        // getting this error, the "anonymous class $anonfun" bit looks suspicious
+        /*
+[error]   last tree to typer: term apply
+[error]               symbol: method apply (flags: <method> final)
+[error]    symbol definition: final def apply(): Unit
+[error]                  tpe: <notype>
+[error]        symbol owners: method apply -> anonymous class $anonfun -> value <local FakeSpec> -> class FakeSpec -> package testing
+[error]       context owners: class Foo
+         */
+
+        // symbol owners: method apply -> anonymous class $anonfun -> value <local FakeSpec> -> class FakeSpec -> package testing
 
       //t
 
-      // case t: ModuleDef =>
-      //   if (!isIde) {
-      //     println("\n")
-      //     println(t)
-      //     println(showRaw(t))
-      //   }
-      //   t
+      case t: ModuleDef =>
+        if (!isIde) {
+          println("\n")
+          println(t)
+          println(showRaw(t))
+          println(showRaw(t.symbol))
+        }
+        t
 
       case t => t
     }
