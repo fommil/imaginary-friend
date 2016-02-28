@@ -95,7 +95,7 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
 
   private val ImaginaryFriend = new TransformingComponent(global) {
     override val phaseName: String = "imaginary-companion"
-    import global._
+    //import global._
 
     override def transform = {
       case t =>

@@ -7,8 +7,6 @@ import scala.language.experimental.macros
 import scala.reflect.macros.Universe
 import scala.reflect.macros.whitebox.Context
 
-import macrocompat._
-
 /**
  * Generates dummy methods on the companion, for use in the
  * presentation compiler to spoof more complex compiler plugins, but
