@@ -30,9 +30,9 @@ class Foo(foo: String, bar: Long)
 // object Foo extends ((String, Long) => Foo) {
 //   def apply(foo: String, bar: Long): Foo = new Foo(foo, bar)
 // }
-// object Foo {
-//   def apply(foo: String, bar: Long): Foo = new Foo(foo, bar)
-// }
+object Foo {
+  def ignore(foo: String, bar: Long): Foo = new Foo(foo, bar)
+}
 
 //@imaginary
 //class Mine(val foo: String = "foo", val bar: Long = 13)
@@ -43,7 +43,9 @@ class FakeSpec extends FlatSpec with Matchers {
   // }
 
   it should "create Foo's companion" in {
-    //Foo.apply("foo", 13L) shouldBe a[Foo]
+    Mallgan shouldBe a[Mallgan.type]
+
+    Foo("foo", 13L) shouldBe a[Foo]
   }
 
   //  it should "generate companion apply with parameters" in {

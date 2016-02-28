@@ -3,6 +3,8 @@
 import sbt._
 import Keys._
 import SonatypeSupport._
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
 
 object ImaginaryFriendBuild extends Build {
 
@@ -13,9 +15,10 @@ object ImaginaryFriendBuild extends Build {
     version := "1.0.0-SNAPSHOT"
   )
 
-  def p(name: String): Project = Project(name, file(name)).settings(
-    Sensible.settings ++ sonatype("fommil", "imaginary-friend", Apache2)
-  ).settings(
+  def p(name: String): Project = Project(name, file(name)).settings(sharedSettings)
+
+  lazy val sharedSettings = Sensible.settings ++ sonatype("fommil", "imaginary-friend", Apache2) ++ Seq(
+    ScalariformKeys.preferences := FormattingPreferences().setPreference(AlignSingleLineCaseStatements, true),
     updateOptions := updateOptions.value.withCachedResolution(true),
     libraryDependencies ++= Sensible.testLibs() ++ Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value
@@ -43,6 +46,10 @@ object ImaginaryFriendBuild extends Build {
       // needs timestamp to force recompile
       Seq("-Xplugin:" + jar.getAbsolutePath, "-Jdummy=" + jar.lastModified)
     }
+  )
+
+  lazy val root = Project("root", file(".")).settings(sharedSettings).aggregate(
+    pctest, blackbox, whitebox, plugin
   )
 
 }
