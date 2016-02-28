@@ -129,17 +129,6 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       //def name = newTermName(clazz.name.toString)
       def tpe = newTypeName(clazz.name.toString)
 
-      // IN params
-      // Some(List(List(ValDef(Modifiers(PARAM | PARAMACCESSOR), newTermName("foo"), Ident(newTypeName("String")), EmptyTree), ValDef(Modifiers(PARAM | PARAMACCESSOR), newTermName("bar"), Ident(newTypeName("Long")), EmptyTree))))
-
-      // TODO: this alternative for Template.parents will use "extends (String, Long) => Foo" as parent
-      // List(
-      //   AppliedTypeTree(
-      //     Select(Select(Ident(nme.ROOTPKG), "scala"), newTypeName("Function2")),
-      //     List(Ident(newTypeName("String")), Ident(newTypeName("Long")), Ident(newTypeName(name)))
-      //   )
-      // ),
-
       clazz.impl.body.collectFirst {
         case DefDef(_, nme.CONSTRUCTOR, _, params, _, _) => params
       } match {
@@ -148,10 +137,16 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
           val apply = DefDef(
             Modifiers(),
             newTermName("apply"),
-            List(),
-            ps.map { _.map { p => p.copy() /* drops attrs */ } },
-            Ident(tpe),
-            Literal(Constant(null)) // PC plugins don't need implementations
+            // intentionally drop attrs
+            clazz.tparams.map(_.copy()),
+            ps.map(_.map { p =>
+              // intentionally drop attrs
+              p.copy(mods = (p.mods &~ ModifierFlags.PARAMACCESSOR))
+            }),
+            if (clazz.tparams.isEmpty) Ident(tpe)
+            else AppliedTypeTree(Ident(tpe), clazz.tparams.map { t => Ident(t.name) }),
+            // PC plugins don't need implementations
+            Literal(Constant(null))
           )
           treeCopy.ModuleDef(
             companion, companion.mods, companion.name, {

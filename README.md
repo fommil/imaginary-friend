@@ -30,8 +30,8 @@ class imaginary(foo: String, bar: Boolean) extends StaticAnnotation
 
 where each `class` annotated with `@imaginary` has the following generated:
 
-1. parameters for `foo` and `bar`, unless provided.
-2. `apply` method created on the companion.
+1. calculated defaults for `foo` and `bar` added to uses of the annotation.
+2. `apply` method created on the companion, `case class` style.
 3. a method on the companion for each `val param: T` of the same signature.
 
 For example

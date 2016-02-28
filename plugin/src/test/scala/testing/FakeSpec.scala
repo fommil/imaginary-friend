@@ -34,6 +34,9 @@ object Foo {
 }
 
 @imaginary
+class Baz[T](val fred: T)
+
+@imaginary
 class Mine(val foo: String = "foo", val bar: Long = 13)
 
 class FakeSpec extends FlatSpec with Matchers {
@@ -61,6 +64,15 @@ class FakeSpec extends FlatSpec with Matchers {
     { Mine(foo = "foo"): Mine } shouldBe null
 
     { Mine(bar = 10): Mine } shouldBe null
+  }
+
+  it should "not create anything not @imaginary" in {
+    "Irene" shouldNot compile
+  }
+
+  ignore should "handle typed classes" in {
+    // printing the Tree, this looks like it should work, but it doesn't
+    // { Baz("hello"): Baz[String] } shouldBe null
   }
 
 }
