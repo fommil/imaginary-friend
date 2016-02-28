@@ -35,6 +35,9 @@ object Foo {
 
 @imaginary
 class Baz[T](val fred: T)
+// object Baz {
+//   def apply[T](fred: T): Baz[T] = null
+// }
 
 @imaginary
 class Mine(val foo: String = "foo", val bar: Long = 13)

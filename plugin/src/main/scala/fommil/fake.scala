@@ -190,10 +190,16 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
 
         val updated = t.stats.flatMap {
           case ClassWithoutCompanion(c) if c.mods.hasAnnotationNamed(Imaginary) =>
-            List(c, updateCompanion(c, genCompanion(c)))
+            val companion = updateCompanion(c, genCompanion(c))
+            //println(showRaw(companion))
+            List(c, companion)
 
           case ClassWithCompanion(c, companion) if c.mods.hasAnnotationNamed(Imaginary) =>
             List(updateCompanion(c, companion))
+
+          // case t: ModuleDef =>
+          //   println(showRaw(t))
+          //   List(t)
 
           case t =>
             List(t)
