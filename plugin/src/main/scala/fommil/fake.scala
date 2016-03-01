@@ -76,7 +76,11 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       mods.annotations.map {
         case ann @ Apply(Select(New(Ident(Imaginary)), nme.CONSTRUCTOR), _) =>
           // NOTE: ignores all parameters, even bad ones
-          treeCopy.Apply(ann, ann.fun, Literal(Constant(null)) :: Literal(Constant(true)) :: Nil)
+          treeCopy.Apply(
+            ann,
+            ann.fun,
+            Literal(Constant(true)) :: Literal(Constant(true)) :: Literal(Constant(0)) :: Nil
+          )
 
         case other => other
       }
@@ -104,7 +108,7 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       Modifiers(),
       clazz.name.companionName,
       Template(
-        List(Select(Ident("scala"), newTypeName("AnyRef"))),
+        List(Select(Ident(nme.scala_), nme.AnyRef.toTypeName)),
         emptyValDef,
         List(
           DefDef(
@@ -138,11 +142,12 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
           val apply = DefDef(
             Modifiers(),
             newTermName("apply"),
-            // intentionally drop attrs
-            clazz.tparams.map(_.copy()),
-            ps.map(_.map { p =>
-              // intentionally drop attrs
-              p.copy(mods = (p.mods &~ ModifierFlags.PARAMACCESSOR))
+            clazz.tparams.map { t =>
+              treeCopy.TypeDef(t, t.mods, t.name, t.tparams, t.rhs)
+            },
+            ps.map(_.map { v =>
+              val mods = (v.mods &~ ModifierFlags.PARAMACCESSOR)
+              treeCopy.ValDef(v, mods, v.name, v.tpt, v.rhs)
             }),
             if (clazz.tparams.isEmpty) Ident(tpe)
             else AppliedTypeTree(Ident(tpe), clazz.tparams.map { t => Ident(t.name) }),
@@ -191,15 +196,10 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
         val updated = t.stats.flatMap {
           case ClassWithoutCompanion(c) if c.mods.hasAnnotationNamed(Imaginary) =>
             val companion = updateCompanion(c, genCompanion(c))
-            //println(showRaw(companion))
             List(c, companion)
 
           case ClassWithCompanion(c, companion) if c.mods.hasAnnotationNamed(Imaginary) =>
             List(updateCompanion(c, companion))
-
-          // case t: ModuleDef =>
-          //   println(showRaw(t))
-          //   List(t)
 
           case t =>
             List(t)

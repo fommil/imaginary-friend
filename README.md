@@ -25,14 +25,18 @@ This project is an experiment in what breaks the presentation compiler (specific
 The example used in this experiment is an annotation
 
 ```scala
-class imaginary(foo: String, bar: Boolean) extends StaticAnnotation
+class imaginary(foo: Boolean, bar: Boolean, baz: Int) extends StaticAnnotation
 ```
 
 where each `class` annotated with `@imaginary` has the following generated:
 
 1. calculated defaults for `foo` and `bar` added to uses of the annotation.
 2. `apply` method created on the companion, `case class` style.
-3. a method on the companion for each `val param: T` of the same signature.
+
+For `class`es and `trait`s annotated with `@imaginary`
+
+1. a method on the companion for each `val` or `def` annotated with `@dream` (having the same name as the member, returning a `Future[T]`)
+2. a `private log: LoggerFactory` (also for `object`s annotated with `@imaginary`)
 
 For example
 
@@ -44,7 +48,7 @@ class Baz(val fred: String)
 expands to
 
 ```scala
-@imaginary(foo = null, bar = true)
+@imaginary(foo = true, bar = true, baz = 0)
 class Baz(val fred: String)
 object Baz {
   def apply(fred: String): Baz = null

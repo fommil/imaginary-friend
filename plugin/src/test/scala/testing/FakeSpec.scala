@@ -7,7 +7,7 @@ package testing
 import org.scalatest._
 import scala.annotation.StaticAnnotation
 
-class imaginary(foo: String, bar: Boolean) extends StaticAnnotation
+class imaginary(foo: Boolean, bar: Boolean, baz: Int) extends StaticAnnotation
 
 @imaginary
 class Me
@@ -35,9 +35,6 @@ object Foo {
 
 @imaginary
 class Baz[T](val fred: T)
-// object Baz {
-//   def apply[T](fred: T): Baz[T] = null
-// }
 
 @imaginary
 class Mine(val foo: String = "foo", val bar: Long = 13)
@@ -73,9 +70,8 @@ class FakeSpec extends FlatSpec with Matchers {
     "Irene" shouldNot compile
   }
 
-  ignore should "handle typed classes" in {
-    // printing the Tree, this looks like it should work, but it doesn't
-    // { Baz("hello"): Baz[String] } shouldBe null
+  it should "handle typed classes" in {
+    { Baz("hello"): Baz[String] } shouldBe null
   }
 
 }
