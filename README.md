@@ -66,22 +66,13 @@ To add the compiler plugin example to ENSIME, automatically compiling the plugin
 import sbt._
 import Keys._
 import org.ensime.Imports.EnsimeKeys
+import org.ensime.CommandSupport
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import language.postfixOps
 
-object EnsimeProjectSettings extends AutoPlugin {
+object EnsimeProjectSettings extends AutoPlugin with CommandSupport {
   override def requires = org.ensime.EnsimePlugin
   override def trigger = allRequirements
-
-  protected implicit class RichTaskKey[A](key: TaskKey[A]) {
-    def run(implicit pr: ProjectRef, bs: BuildStructure, s: State): A =
-      runOpt.getOrElse { fail(s"Missing task key: ${key.key.label}") }
-    def runOpt(implicit pr: ProjectRef, bs: BuildStructure, s: State): Option[A] =
-      EvaluateTask(bs, key, s, pr).map(_._2) match {
-        case Some(Value(v)) => Some(v)
-        case _              => None
-      }
-  }
 
   override def projectSettings = Seq(
     EnsimeKeys.scalariform := ScalariformKeys.preferences.value,
