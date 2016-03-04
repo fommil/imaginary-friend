@@ -30,7 +30,7 @@ class imaginary(foo: Boolean, bar: Boolean, baz: Int) extends StaticAnnotation
 
 where each `class` annotated with `@imaginary` has the following generated:
 
-1. calculated defaults for `foo` and `bar` added to uses of the annotation.
+1. calculated defaults for `foo` and `bar` added to uses of the annotation (i.e. workaround [SI-9612](https://issues.scala-lang.org/browse/SI-9612)).
 2. `apply` method created on the companion, `case class` style.
 
 For `class`es and `trait`s annotated with `@imaginary`
