@@ -5,4 +5,4 @@ scalacOptions ++= Seq("-unchecked", "-deprecation")
 
 ivyLoggingLevel := UpdateLogging.Quiet
 
-addSbtPlugin("com.github.alexarchambault" % "coursier-sbt-plugin" % "1.0.0-M9")
+addSbtPlugin("com.github.alexarchambault" % "coursier-sbt-plugin" % "1.0.0-M10")
