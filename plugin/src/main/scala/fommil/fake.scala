@@ -31,13 +31,8 @@ trait WithPos {
   // Modifiers is an inner class, oh joy
   implicit class RichModifiers(t: global.Modifiers) {
     /** withAnnotations appears to be broken */
-    def copyTree(
-      flags: Long = t.flags,
-      annotations: List[global.Tree] = t.annotations
-    ): global.Modifiers = t.copy(
-      flags = flags,
-      annotations = annotations
-    ).setPositions(t.positions)
+    def copyWithAnns(anns: List[global.Tree]): global.Modifiers =
+      t.copy(annotations = anns).setPositions(t.positions)
   }
 }
 
@@ -94,11 +89,11 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
     override def transform = {
       case t: ModuleDef if t.mods.hasAnnotationNamed(Imaginary) =>
         val annotations = imaginaryParameters(t.mods)
-        treeCopy.ModuleDef(t, t.mods.copyTree(annotations = annotations), t.name, t.impl)
+        treeCopy.ModuleDef(t, t.mods.copyWithAnns(annotations), t.name, t.impl)
 
       case t: ClassDef if t.mods.hasAnnotationNamed(Imaginary) =>
         val annotations = imaginaryParameters(t.mods)
-        treeCopy.ClassDef(t, t.mods.copyTree(annotations = annotations), t.name, t.tparams, t.impl)
+        treeCopy.ClassDef(t, t.mods.copyWithAnns(annotations), t.name, t.tparams, t.impl)
 
       case t => t
     }
@@ -139,8 +134,7 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       //def name = newTermName(clazz.name.toString)
       def tpe = newTypeName(clazz.name.toString)
       def stripVariance(t: TypeDef): TypeDef = {
-        val flags = t.mods.flags & ~ModifierFlags.COVARIANT & ~ModifierFlags.CONTRAVARIANT
-        val mods = t.mods.copyTree(flags = flags)
+        val mods = t.mods &~ ModifierFlags.COVARIANT &~ ModifierFlags.CONTRAVARIANT
         val params = t.tparams.map(stripVariance)
         treeCopy.TypeDef(t, mods, t.name, params, t.rhs)
       }
