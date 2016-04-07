@@ -133,6 +133,11 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       // not sure these can be re-used, so create fresh ones
       //def name = newTermName(clazz.name.toString)
       def tpe = newTypeName(clazz.name.toString)
+      def stripVariance(t: TypeDef): TypeDef = {
+        val mods = t.mods &~ ModifierFlags.COVARIANT &~ ModifierFlags.CONTRAVARIANT
+        val params = t.tparams.map(stripVariance)
+        treeCopy.TypeDef(t, mods, t.name, params, t.rhs)
+      }
 
       clazz.impl.body.collectFirst {
         case DefDef(_, nme.CONSTRUCTOR, _, params, _, _) => params
@@ -142,9 +147,7 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
           val apply = DefDef(
             Modifiers(),
             newTermName("apply"),
-            clazz.tparams.map { t =>
-              treeCopy.TypeDef(t, t.mods, t.name, t.tparams, t.rhs)
-            },
+            clazz.tparams.map(stripVariance),
             ps.map(_.map { v =>
               val mods = (v.mods &~ ModifierFlags.PARAMACCESSOR)
               treeCopy.ValDef(v, mods, v.name, v.tpt, v.rhs)

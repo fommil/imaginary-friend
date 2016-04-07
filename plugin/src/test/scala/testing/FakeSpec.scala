@@ -39,6 +39,9 @@ class Baz[T](val fred: T)
 @imaginary
 class Mine(val foo: String = "foo", val bar: Long = 13)
 
+@imaginary class Covariant[+I](item: I)
+@imaginary class Contravariant[-I](item: I)
+
 class FakeSpec extends FlatSpec with Matchers {
   "@imaginary" should "generate companion's apply with no parameters" in {
     { Me(): Me } shouldBe null
@@ -74,4 +77,11 @@ class FakeSpec extends FlatSpec with Matchers {
     { Baz("hello"): Baz[String] } shouldBe null
   }
 
+  // it should "handle covariant types" in {
+  //   { Covariant(""): Covariant[String] } shouldBe null
+  // }
+
+  // it should "handle contravariant types" in {
+  //   { Contravariant(""): Contravariant[String] } shouldBe null
+  // }
 }
