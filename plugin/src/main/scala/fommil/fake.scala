@@ -140,10 +140,10 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       }.duplicate
 
       clazz.impl.body.collectFirst {
-        case DefDef(_, nme.CONSTRUCTOR, _, params, _, _) => params
+        case d @ DefDef(_, nme.CONSTRUCTOR, _, params, _, _) => (params, d.pos)
       } match {
         case None => companion // traits don't have constructor parameters
-        case Some(ps) =>
+        case Some((ps, pos)) =>
           val apply = DefDef(
             Modifiers(),
             newTermName("apply"),
@@ -157,6 +157,7 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
             // PC plugins don't need implementations
             Literal(Constant(null))
           )
+          apply.setPos(pos)
           treeCopy.ModuleDef(
             companion, companion.mods, companion.name, {
             val impl = companion.impl
