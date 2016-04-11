@@ -77,11 +77,11 @@ class FakeSpec extends FlatSpec with Matchers {
     { Baz("hello"): Baz[String] } shouldBe null
   }
 
-  // it should "handle covariant types" in {
-  //   { Covariant(""): Covariant[String] } shouldBe null
-  // }
+  it should "handle covariant types" in {
+    { Covariant(""): Covariant[String] } shouldBe null
+  }
 
-  // it should "handle contravariant types" in {
-  //   { Contravariant(""): Contravariant[String] } shouldBe null
-  // }
+  it should "handle contravariant types" in {
+    { Contravariant(""): Contravariant[String] } shouldBe null
+  }
 }

@@ -137,7 +137,7 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
         val mods = t.mods &~ ModifierFlags.COVARIANT &~ ModifierFlags.CONTRAVARIANT
         val params = t.tparams.map(stripVariance)
         treeCopy.TypeDef(t, mods, t.name, params, t.rhs)
-      }
+      }.duplicate
 
       clazz.impl.body.collectFirst {
         case DefDef(_, nme.CONSTRUCTOR, _, params, _, _) => params
@@ -150,7 +150,7 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
             clazz.tparams.map(stripVariance),
             ps.map(_.map { v =>
               val mods = (v.mods &~ ModifierFlags.PARAMACCESSOR)
-              treeCopy.ValDef(v, mods, v.name, v.tpt, v.rhs)
+              treeCopy.ValDef(v, mods, v.name, v.tpt.duplicate, v.rhs)
             }),
             if (clazz.tparams.isEmpty) Ident(tpe)
             else AppliedTypeTree(Ident(tpe), clazz.tparams.map { t => Ident(t.name) }),
