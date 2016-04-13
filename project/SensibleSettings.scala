@@ -106,15 +106,17 @@ object Sensible {
   val streamsVersion = "1.0"
   val scalatestVersion = "2.2.6"
   val logbackVersion = "1.7.16"
-  val quasiquotesVersion = "2.0.1"
+  val quasiquotesVersion = "2.1.0"
   val guavaVersion = "18.0"
 
-  val macroParadise = Seq(
-    compilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full),
-    "org.scalamacros" %% "quasiquotes" % quasiquotesVersion
-  )
+  val macroParadise = compilerPlugin("org.scalamacros" % "paradise" % quasiquotesVersion cross CrossVersion.full)
+
   def shapeless(scalaVersion: String) = {
-    if (scalaVersion.startsWith("2.10.")) macroParadise
+    if (scalaVersion.startsWith("2.10."))
+      Seq(
+        macroParadise,
+        "org.scalamacros" %% "quasiquotes" % quasiquotesVersion
+      )
     else Nil
   } :+ "com.chuusai" %% "shapeless" % "2.3.0"
   val logback = Seq(

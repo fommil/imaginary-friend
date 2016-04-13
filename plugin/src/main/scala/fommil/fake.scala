@@ -128,7 +128,38 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
       )
     )
 
-    /** outputs an update to companion based on the content of clazz */
+    def genLog: DefDef = DefDef(
+      Modifiers(ModifierFlags.PRIVATE),
+      newTermName("log"),
+      Nil,
+      Nil,
+      Select(Select(Select(Ident(nme.java), newTermName("util")), newTermName("logging")), newTypeName("Logger")),
+      Literal(Constant(null))
+    )
+
+    def genProperty(name: String, tpt: Tree): DefDef = DefDef(
+      Modifiers(),
+      newTermName(name),
+      Nil,
+      Nil,
+      tpt,
+      Literal(Constant(null))
+    )
+
+    def addMethods(template: Template, methods: List[DefDef]): Template = {
+      val body = methods ::: template.body
+      treeCopy.Template(template, template.parents, template.self, body)
+    }
+
+    /** adds a log method to a class */
+    def updateClass(clazz: ClassDef): ClassDef = {
+      val log = genLog
+      log.setPos(clazz.pos)
+      val impl = addMethods(clazz.impl, log :: Nil)
+      treeCopy.ClassDef(clazz, clazz.mods, clazz.name, clazz.tparams, impl)
+    }
+
+    /** adds a apply and log methods to a companion to a class */
     def updateCompanion(clazz: ClassDef, companion: ModuleDef): ModuleDef = {
       // not sure these can be re-used, so create fresh ones
       //def name = newTermName(clazz.name.toString)
@@ -158,10 +189,24 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
             Literal(Constant(null))
           )
           apply.setPos(pos)
+
+          val log = genLog
+          log.setPos(pos)
+
+          val properties = ps.flatMap {
+            vs =>
+              vs.flatMap {
+                v =>
+                  // 1. need to take the type of v: V and turn it into Future[V]
+                  // 2. add the type parameters of the class to the method (taking only what is needed for the method)
+                  //genProperty(v.name.toString, Ident("scala.concurrent.Future[Unit]"))
+                  Nil
+              }
+          }
+
           treeCopy.ModuleDef(
             companion, companion.mods, companion.name, {
-            val impl = companion.impl
-            treeCopy.Template(impl, impl.parents, impl.self, apply :: impl.body)
+            addMethods(companion.impl, apply :: log :: properties)
           }
           )
       }
@@ -182,27 +227,37 @@ class ImaginaryPlugin(override val global: Global) extends Plugin {
           case m: ModuleDef => m.name -> m
         }(breakOut)
 
-        object ClassWithoutCompanion {
+        object ClassNoCompanion {
           def unapply(t: Tree): Option[ClassDef] = t match {
             case c: ClassDef if !companions.contains(c.name.companionName) => Some(c)
             case _ => None
           }
         }
 
-        object ClassWithCompanion {
-          def unapply(t: Tree): Option[(ClassDef, ModuleDef)] = t match {
+        object ClassHasCompanion {
+          def unapply(t: Tree): Option[ClassDef] = t match {
+            case c: ClassDef if companions.contains(c.name.companionName) => Some(c)
+            case _ => None
+          }
+        }
+
+        object CompanionAndClass {
+          def unapply(t: Tree): Option[(ModuleDef, ClassDef)] = t match {
             case m: ModuleDef =>
-              classes.get(m.name.companionName).map { c => (c, m) }
+              classes.get(m.name.companionName).map { c => (m, c) }
             case _ => None
           }
         }
 
         val updated = t.stats.flatMap {
-          case ClassWithoutCompanion(c) if c.mods.hasAnnotationNamed(Imaginary) =>
+          case ClassNoCompanion(c) if c.mods.hasAnnotationNamed(Imaginary) =>
             val companion = updateCompanion(c, genCompanion(c))
-            List(c, companion)
+            List(updateClass(c), companion)
 
-          case ClassWithCompanion(c, companion) if c.mods.hasAnnotationNamed(Imaginary) =>
+          case ClassHasCompanion(c) if c.mods.hasAnnotationNamed(Imaginary) =>
+            List(updateClass(c))
+
+          case CompanionAndClass(companion, c) if c.mods.hasAnnotationNamed(Imaginary) =>
             List(updateCompanion(c, companion))
 
           case t =>

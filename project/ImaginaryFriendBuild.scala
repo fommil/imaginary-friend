@@ -22,14 +22,14 @@ object ImaginaryFriendBuild extends Build {
     updateOptions := updateOptions.value.withCachedResolution(true),
     libraryDependencies ++= Sensible.testLibs() ++ Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value
-    ) ++ Sensible.macroParadise
+    )
   )
 
   lazy val pctest = p("pctest").settings(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       "org.typelevel" %% "macro-compat" % "1.1.0"
-    ) ++ Sensible.macroParadise
+    )
   )
 
   lazy val blackbox = p("blackbox").settings(
@@ -37,8 +37,9 @@ object ImaginaryFriendBuild extends Build {
 
   lazy val whitebox = p("whitebox").settings(
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "macro-compat" % "1.1.0"
-    ) ++ Sensible.macroParadise
+      "org.typelevel" %% "macro-compat" % "1.1.0",
+      Sensible.macroParadise
+    )
   )
 
   lazy val plugin = p("plugin").settings(

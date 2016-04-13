@@ -4,6 +4,7 @@
 // intentionally not in fommil for testing
 package testing
 
+import scala.concurrent.Future
 import org.scalatest._
 import scala.annotation.StaticAnnotation
 
@@ -41,6 +42,19 @@ class Mine(val foo: String = "foo", val bar: Long = 13)
 
 @imaginary class Covariant[+I](item: I)
 @imaginary class Contravariant[-I](item: I)
+
+@imaginary
+class LoggingFutures(a: String, b: Long) {
+  def exposed = log
+}
+@imaginary
+object LoggingFutures {
+  def exposed = log
+
+  // FIXME: these need to be implemented by the plugin
+  def a: Future[String] = null
+  def b: Future[Long] = null
+}
 
 class FakeSpec extends FlatSpec with Matchers {
   "@imaginary" should "generate companion's apply with no parameters" in {
@@ -84,4 +98,19 @@ class FakeSpec extends FlatSpec with Matchers {
   it should "handle contravariant types" in {
     { Contravariant(""): Contravariant[String] } shouldBe null
   }
+
+  it should "generate a log method on the instance" in {
+    { new LoggingFutures("hello", 0).exposed } shouldBe null
+  }
+
+  it should "generate a log method on the companion" in {
+    { LoggingFutures.exposed } shouldBe null
+  }
+
+  it should "generate future methods on the companion" in {
+    { LoggingFutures.a: Future[String] } shouldBe null
+
+    { LoggingFutures.b: Future[Long] } shouldBe null
+  }
+
 }
