@@ -1,3 +1,5 @@
+**NOTE** this experiment has been replaced by [ensime/pcplod](https://github.com/ensime/pcplod). It remains only for reference.
+
 # Need
 
 Macros and compiler plugins are becoming popular in scala projects to reduce boilerplate, but the IDEs are unable to keep up (issuing many "false positive" errors). This results in a trade-off for developers between reducing boilerplate or reducing functionality in their editor.
